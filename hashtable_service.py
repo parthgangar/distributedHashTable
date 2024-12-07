@@ -1,12 +1,14 @@
 import sys, os, re, socket
 from hashtable import HashTable
 from threading import Thread
+from queue import Queue
 
 class HashTableService:
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
         self.ht = HashTable()
+        self.request_queue = Queue() #Add a queue to store requests
     
     def handle_commands(self, msg):
         set_ht = re.match('^set ([a-zA-Z0-9]+) ([a-zA-Z0-9]+)$', msg)
@@ -28,18 +30,30 @@ class HashTableService:
 
         return output
     
+    def process_requests(self):
+        while True:
+            conn, msg = self.request_queue.get() #Get the request from the queue
+            try:
+                print(f"Processing request: {msg}")
+                output = self.handle_commands(msg)
+                conn.send(output.encode())
+            except Exception as e:
+                print("Error processing request")
+                print(e)
+            finally:
+                self.request_queue.task_done() #Mark the request as done
+    
     def process_request(self, conn):
         while True:
             try:
                 msg = conn.recv(2048).decode()
-                print(f"Received: {msg}")
-                output = self.handle_commands(msg)
-
-                conn.send(output.encode())
-
+                if not msg:
+                    break
+                self.request_queue.put((conn, msg)) #Add the request to the queue
             except Exception as e:
                 print("Error processing message from client")
                 print(e)
+                break
     
     def listen_to_clients(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -47,6 +61,12 @@ class HashTableService:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind(('0.0.0.0', int(self.port)))
         sock.listen(5)
+        print(f"Listening on  {self.ip}:{self.port}")
+
+        # Start the thread to process requests
+        request_thread = Thread(target=self.process_requests)
+        request_thread.daemon = True
+        request_thread.start()
 
         while True:
             try:
@@ -55,9 +75,9 @@ class HashTableService:
                 my_thread = Thread(target=self.process_request, args=(client_socket,))
                 my_thread.daemon = True
                 my_thread.start()
-
-            except:
-                print("Error accepting connection...")
+            except Exception as e:
+                print(f"Error accepting connection: {e}")
+                break
     
 if __name__ == "__main__":
     ip_address = str(sys.argv[1])
