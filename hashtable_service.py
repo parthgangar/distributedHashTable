@@ -39,7 +39,7 @@ class HashTableService:
 
         return output
     
-    def process_requests(self):
+    def process_requests_from_queue(self):
         while True:
             conn, msg = self.request_queue.get() #Get the request from the queue
             try:
@@ -51,7 +51,7 @@ class HashTableService:
             finally:
                 self.request_queue.task_done() #Mark the request as done
     
-    def process_request(self, conn):
+    def client_handler(self, conn):
         while True:
             try:
                 msg = conn.recv(2048).decode()
@@ -71,7 +71,7 @@ class HashTableService:
         logger.info(f"Listening on  {self.ip}:{self.port}")
 
         # Start the thread to process requests
-        process_requestThread = Thread(target=self.process_requests)
+        process_requestThread = Thread(target=self.process_requests_from_queue)
         process_requestThread.daemon = True
         process_requestThread.start()
 
@@ -79,9 +79,9 @@ class HashTableService:
             try:
                 client_socket, client_address = sock.accept()
                 logger.info(f"Connected to new client at address {client_address}")
-                client_handler = Thread(target=self.process_request, args=(client_socket,))
-                client_handler.daemon = True
-                client_handler.start()
+                client_handlerThread = Thread(target=self.client_handler, args=(client_socket,))
+                client_handlerThread.daemon = True
+                client_handlerThread.start()
             except Exception as e:
                 logger.error(f"Error accepting connection: {e}")
                 break
