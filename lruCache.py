@@ -1,7 +1,9 @@
 from typing import Dict
 from linkList import Node, LinkedList
+from performance_statistics import PerformanceStatistics
 import json
 import os
+import time
 
 class LRUCache:
     """
@@ -11,12 +13,14 @@ class LRUCache:
     cache_map: Dict[int, Node]
     history: LinkedList
     disk_path: str
+    stats: PerformanceStatistics
 
     def __init__(self, capacity: int, disk_path: str = "cache_disk"):
         self.capacity = capacity
         self.cache_map = {}
         self.history = LinkedList()
         self.disk_path = disk_path
+        self.stats = PerformanceStatistics()
         if not os.path.exists(self.disk_path):
             os.makedirs(self.disk_path)
 
@@ -24,16 +28,26 @@ class LRUCache:
         """
         Retrieve value by its key or -1 otherwise
         """
+        self.stats.record_read_request()
+        start_time = time.time()
         if key in self.cache_map:
             value_node: Node = self.cache_map[key]
             if self.history.head != value_node:
                 # make item the most recently used
                 self.history.unlink(value_node)
                 self.history.add_to_head(value_node)
+            self.stats.record_hit()
+            self.stats.record_cache_read_time(start_time)
             return value_node.value
         else:
             # Try to read from disk
-            return self.read_from_disk(key)
+            value = self.read_from_disk(key)
+            if value != -1:
+                self.stats.record_hit()
+            else:
+                self.stats.record_miss()
+            self.stats.record_disk_read_time(start_time)
+            return value
 
     def put(self, key: int, value: int) -> None:
         """
@@ -41,6 +55,7 @@ class LRUCache:
         If key exists, replace its value by a new one.
         If capacity is reached, evict the LRU item and insert a new pair
         """
+        self.stats.record_write_request()
         value_node: Node = Node(key, value)
 
         if key in self.cache_map:

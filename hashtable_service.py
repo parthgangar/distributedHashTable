@@ -1,5 +1,4 @@
-import sys, os, re, socket
-import logging
+import sys, re, socket, time
 from hashtable import HashTable
 from threading import Thread
 from queue import Queue
@@ -12,16 +11,17 @@ class HashTableService:
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
-        self.ht = HashTable()
-        self.request_queue = Queue() #Add a queue to store requests
-    
+        self.ht = HashTable(capacity=10, disk_path="cache_disk")
+        self.request_queue = Queue()
+
     def handle_command(self, command):
         set_ht = re.match('^set ([a-zA-Z0-9]+) ([a-zA-Z0-9]+)$', command)
         get_ht = re.match('^get ([a-zA-Z0-9]+)$', command)
 
+        start_time = time.time()
         if set_ht:
             key, value = set_ht.groups()
-            res = self.ht.set(key=key, value=value)
+            self.ht.set(key=key, value=value)
             output = "Inserted"
             logger.info(f"Inserted key: {key} value: {value}")
 
@@ -37,7 +37,9 @@ class HashTableService:
         else:
             output = "Error: Invalid command"
             logger.error(f"Invalid command: {command}")
-
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        logger.info(f"Time taken for command '{command}': {elapsed_time:.6f} seconds")
         return output
     
     def handle_commands(self, commands):
