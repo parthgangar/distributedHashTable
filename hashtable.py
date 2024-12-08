@@ -1,11 +1,10 @@
+from lruCache import LRUCache
 class HashTable:
-    def __init__(self):
-        self.map = {}
+    def __init__(self, capacity=10):
+        self.cache = LRUCache(capacity)
     
     def set(self, key, value):
-        self.map[key] = value
+        self.cache.put(key, value)
     
     def get(self, key):
-        if key in self.map:
-            return self.map[key]
-        return None
+        return self.cache.get(key)
