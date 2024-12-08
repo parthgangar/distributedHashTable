@@ -1,7 +1,7 @@
 import sys, socket
 from threading import Thread
 from logger import Logger
-import logging
+import json
 
 logger = Logger(name='ClientLogger')
 
@@ -16,7 +16,6 @@ if len(sys.argv) != 3:
 
 server_ip_address = str(sys.argv[1])
 server_port = int(sys.argv[2])
-
 server = get_socket()
 server.connect((server_ip_address, server_port))
 
@@ -30,5 +29,13 @@ t.daemon = True
 t.start()
 
 while True:
-    command = input()
-    server.send(command.encode())
+    commands = []
+    print("Enter commands (type 'done' to finish):")
+    while True:
+        command = input()
+        if command.lower() == 'done':
+            break
+        commands.append(command)
+    
+    json_data = json.dumps(commands)
+    server.send(json_data.encode())
