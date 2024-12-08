@@ -17,6 +17,7 @@ class HashTableService:
     def handle_command(self, command):
         set_ht = re.match('^set ([a-zA-Z0-9]+) ([a-zA-Z0-9]+)$', command)
         get_ht = re.match('^get ([a-zA-Z0-9]+)$', command)
+        stats_ht = re.match('^stats$', command)
 
         start_time = time.time()
         if set_ht:
@@ -33,6 +34,9 @@ class HashTableService:
                 logger.warning(f"Key {key} does not exist")
             else:
                 logger.info(f"Retrieved value: {output}")
+        elif stats_ht:
+            output = self.get_performance_statistics()
+            logger.info("Performance statistics requested")
 
         else:
             output = "Error: Invalid command"
@@ -42,6 +46,10 @@ class HashTableService:
         logger.info(f"Time taken for command '{command}': {elapsed_time:.6f} seconds")
         return output
     
+    def get_performance_statistics(self):
+        stats = self.ht.cache.stats.get_statistics()
+        return json.dumps(stats, indent=4)
+
     def handle_commands(self, commands):
         results = []
         for command in commands:
