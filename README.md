@@ -30,32 +30,33 @@ This project implements a Distributed Hash Table (DHT) with an LRU (Least Recent
 
 ## Running the Project
 
-### Step 1: Start the Coordinator Node
+### Step 1: Start the Server Nodes
+
+1. Open multiple terminals (one for each server) and navigate to the project directory.
+2. Run the following command to start the server node:
+     ```bash
+     python dht.py <SERVER_IP> <SERVER_PORT>
+     ```
+     Replace `<SERVER_IP>` and `<SERVER_PORT>` with the desired IP address and port number.
+
+### Step 2: Start the Coordinator Node
 
 1. Open a terminal and navigate to the project directory.
 2. Run the following command to start the coordinator node:
      ```bash
-     python coordinator_node.py <COORDINATOR_IP> <COORDINATOR_PORT>
+     python coordinator_node.py <COORDINATOR_IP> <COORDINATOR_PORT> <LIST OF SERVER_IP & SERVER_PORT>
      ```
      Replace `<COORDINATOR_IP>` and `<COORDINATOR_PORT>` with the desired IP address and port number.
-
-### Step 2: Start the Server Nodes
-
-1. Open multiple terminals (one for each server) and navigate to the project directory.
-2. Run the following command in each terminal to start a server node:
-        ```bash
-        python hashtable_service.py <SERVER_IP> <SERVER_PORT>
-        ```
-        Replace `<SERVER_IP>` and `<SERVER_PORT>` with the desired IP address and port number for each server.
+     Replace `<LIST OF SERVER_IP & SERVER_PORT>` with a space-separated list of server IP addresses and port numbers.
 
 ### Step 3: Start the Clients
 
 1. Open multiple terminals (one for each client) and navigate to the project directory.
-2. Run the following command in each terminal to start a client:
-        ```bash
-        python client.py <COORDINATOR_IP> <COORDINATOR_PORT>
-        ```
-        Replace `<COORDINATOR_IP>` and `<COORDINATOR_PORT>` with the IP address and port number of the coordinator node.
+2. Run the following command to start a client:
+     ```bash
+     python client.py <COORDINATOR_IP> <COORDINATOR_PORT>
+     ```
+     Replace `<COORDINATOR_IP>` and `<COORDINATOR_PORT>` with the desired IP address and port number.
 
 ### Step 4: Interact with the System
 
@@ -78,30 +79,26 @@ In the client terminal, enter commands to interact with the system. For example:
     stats
     ```
 
-### Example Usage
-
-1. Start the coordinator node:
-        ```bash
-        python coordinator_node.py 127.0.0.1 8000
-        ```
-
-2. Start two server nodes:
-        ```bash
-        python hashtable_service.py 127.0.0.1 8001
-        python hashtable_service.py 127.0.0.1 8002
-        ```
-
-3. Start a client:
-        ```bash
-        python client.py 127.0.0.1 8000
-        ```
-
-4. In the client terminal, enter commands:
-        ```bash
-        set key1 value1
-        get key1
-        stats
-        ```
-
 > **Note:**
 > - The `stats` command is currently not working. This issue is yet to be fixed.
+
+
+### Example Usage
+
+1. Start a server node:
+    ```bash
+    python dht.py 127.0.0.1 5000
+    python dht.py 127.0.0.1 5001
+    ```
+
+2. Start the coordinator node:
+    ```bash
+    python coordinator_node.py 127.0.0.1 4000
+    ``` 
+
+3. Start multiple clients:
+    ```bash
+    python client.py 127.0.0.1 4000
+    python client.py 127.0.0.1 4000
+    ```
+
