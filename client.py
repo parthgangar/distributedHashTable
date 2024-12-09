@@ -22,7 +22,8 @@ server.connect((server_ip_address, server_port))
 def listen_for_messages():
     while True:
         output = server.recv(2048).decode()
-        logger.info(output)
+        if output:
+            logger.info(output)
 
 t = Thread(target=listen_for_messages)
 t.daemon = True
