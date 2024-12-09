@@ -14,14 +14,14 @@ if len(sys.argv) != 3:
     logger.error("Correct usage: script, IP address, port number")
     exit()
 
-server_ip_address = str(sys.argv[1])
-server_port = int(sys.argv[2])
-server = get_socket()
-server.connect((server_ip_address, server_port))
+coordinator_ip_address = str(sys.argv[1])
+coordinator_port = int(sys.argv[2])
+coordinator = get_socket()
+coordinator.connect((coordinator_ip_address, coordinator_port))
 
 def listen_for_messages():
     while True:
-        output = server.recv(2048).decode()
+        output = coordinator.recv(2048).decode()
         if output:
             logger.info(output)
 
@@ -39,4 +39,4 @@ while True:
         commands.append(command)
     
     json_data = json.dumps(commands)
-    server.send(json_data.encode())
+    coordinator.send(json_data.encode())

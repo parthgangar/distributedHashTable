@@ -86,7 +86,6 @@ class LRUCache:
         """
         self.history.unlink(item)
         del self.cache_map[item.key]
-        del item
 
     def write_to_disk(self, key: int, value: int) -> None:
         """

@@ -5,7 +5,7 @@ from logger import Logger
 logger = Logger(name='CoordinatorLogger')
 
 class ConsistentHashing:
-    def __init__(self, nodes=None, replicas=3):
+    def __init__(self, nodes=None, replicas=1):
         self.replicas = replicas
         self.ring = dict()
         self.sorted_keys = []
@@ -13,22 +13,22 @@ class ConsistentHashing:
             for node in nodes:
                 self.add_node(node)
 
-    def hash(self, key):
+    def hash(self, key: str) -> int:
         return int(hashlib.md5(key.encode('utf-8')).hexdigest(), 16)
 
-    def add_node(self, node):
+    def add_node(self, node: str) -> None:
         for i in range(self.replicas):
             key = self.hash(f"{node}:{i}")
             self.ring[key] = node
             bisect.insort(self.sorted_keys, key)
 
-    def remove_node(self, node):
+    def remove_node(self, node: str) -> None:
         for i in range(self.replicas):
             key = self.hash(f"{node}:{i}")
             del self.ring[key]
             self.sorted_keys.remove(key)
 
-    def get_node(self, key):
+    def get_node(self, key: str) -> str:
         if not self.ring:
             return None
         hash_key = self.hash(key)
@@ -38,7 +38,7 @@ class ConsistentHashing:
         return self.ring[self.sorted_keys[idx]]
 
 class CoordinatorNode:
-    def __init__(self, ip, port, server_addresses):
+    def __init__(self, ip: str, port: int, server_addresses: list):
         self.ip = ip
         self.port = port
         self.server_addresses = server_addresses
@@ -46,12 +46,12 @@ class CoordinatorNode:
         self.request_queue = Queue()
         self.consistent_hashing = ConsistentHashing(nodes=server_addresses)
 
-    def connect_to_server(self, address):
+    def connect_to_server(self, address: tuple) -> socket.socket:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect(address)
         return sock
 
-    def forward_request_to_server(self, command):
+    def forward_request_to_server(self, command: str) -> str:
         set_ht = re.match('^set ([a-zA-Z0-9]+) ([a-zA-Z0-9]+)$', command)
         get_ht = re.match('^get ([a-zA-Z0-9]+)$', command)
         stats_ht = re.match('^stats$', command)
@@ -81,7 +81,7 @@ class CoordinatorNode:
         else:
             return "Error: Invalid command"
 
-    def aggregate_stats(self, stats_list):
+    def aggregate_stats(self, stats_list: list) -> dict:
         aggregated_stats = {
             "hit_rate": 0,
             "read_requests": 0,
@@ -99,7 +99,7 @@ class CoordinatorNode:
         aggregated_stats["hit_rate"] /= num_servers
         return aggregated_stats
 
-    def process_requests(self):
+    def process_requests(self) -> None:
         while True:
             conn, msg = self.request_queue.get()
             try:
@@ -113,7 +113,7 @@ class CoordinatorNode:
             finally:
                 self.request_queue.task_done()
 
-    def process_request(self, conn):
+    def process_request(self, conn: socket.socket) -> None:
         while True:
             try:
                 msg = conn.recv(2048).decode()
@@ -124,7 +124,7 @@ class CoordinatorNode:
                 logger.error(f"Error receiving message from client: {e}")
                 break
 
-    def listen_to_clients(self):
+    def listen_to_clients(self) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((self.ip, self.port))
@@ -158,5 +158,3 @@ if __name__ == "__main__":
 
     coordinator = CoordinatorNode(ip=ip_address, port=port, server_addresses=server_addresses)
     coordinator.listen_to_clients()
-
-    

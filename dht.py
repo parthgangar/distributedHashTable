@@ -5,16 +5,16 @@ from queue import Queue
 from logger import Logger
 import json
 
-logger = Logger(name='HashTableServiceLogger')
+logger = Logger(name='DHTLogger')
 
-class HashTableService:
-    def __init__(self, ip, port):
+class DHT:
+    def __init__(self, ip: str, port: int):
         self.ip = ip
         self.port = port
         self.ht = HashTable(capacity=10, disk_path="cache_disk")
         self.request_queue = Queue()
 
-    def handle_command(self, command):
+    def handle_command(self, command: str) -> str:
         set_ht = re.match('^set ([a-zA-Z0-9]+) ([a-zA-Z0-9]+)$', command)
         get_ht = re.match('^get ([a-zA-Z0-9]+)$', command)
         stats_ht = re.match('^stats$', command)
@@ -46,18 +46,18 @@ class HashTableService:
         logger.info(f"Time taken for command '{command}': {elapsed_time:.6f} seconds")
         return output
     
-    def get_performance_statistics(self):
+    def get_performance_statistics(self) -> str:
         stats = self.ht.cache.stats.get_statistics()
         return json.dumps(stats, indent=4)
 
-    def handle_commands(self, commands):
+    def handle_commands(self, commands: list) -> list:
         results = []
         for command in commands:
             result = self.handle_command(command)
             results.append(result)
         return results
     
-    def process_requests_from_queue(self):
+    def process_requests_from_queue(self) -> None:
         while True:
             conn, msg = self.request_queue.get() #Get the request from the queue
             try:
@@ -71,7 +71,7 @@ class HashTableService:
             finally:
                 self.request_queue.task_done() #Mark the request as done
     
-    def client_handler(self, conn):
+    def client_handler(self, conn: socket.socket) -> None:
         while True:
             try:
                 msg = conn.recv(2048).decode()
@@ -82,7 +82,7 @@ class HashTableService:
                 logger.error(f"Error processing message from client: {e}")
                 break
     
-    def listen_to_clients(self):
+    def listen_to_clients(self) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((self.ip, int(self.port)))
@@ -108,5 +108,5 @@ class HashTableService:
 if __name__ == "__main__":
     ip_address = str(sys.argv[1])
     port = int(sys.argv[2])
-    dht = HashTableService(ip=ip_address, port=port)
+    dht = DHT(ip=ip_address, port=port)
     dht.listen_to_clients()
