@@ -5,7 +5,7 @@ This project implements a Distributed Hash Table (DHT) with an LRU (Least Recent
 > This module provides a prototype implementation of the DHT functionality.
 >
 > **Note:**
-> - This prototype has been tested on a single local machine with basic level testing. It is not intended for production use or industry-level testing.
+> - This prototype has been tested on a single local machine with basic-level testing. It is not intended for production use or industry-level testing.
 
 ## Prerequisites
 
@@ -21,7 +21,7 @@ This project implements a Distributed Hash Table (DHT) with an LRU (Least Recent
 
 - `client.py`: Client implementation to send commands to the coordinator node.
 - `coordinator_node.py`: Coordinator node implementation to distribute keys to servers.
-- `hashtable_service.py`: Server implementation to handle key-value storage with LRU cache.
+- `dht.py`: Server implementation to handle key-value storage with LRU cache.
 - `kademlia.py`: Kademlia DHT implementation (yet to integrate it thoroughly).
 - `logger.py`: Logger utility for logging messages.
 - `performance_statistics.py`: Performance statistics collection and reporting.
